@@ -93,16 +93,29 @@ protected:
           const char *fname) {
     cv::Mat res = cv::imread(fname);
     utils::Assert(res.data != NULL, "LoadImage: Reading image %s failed.\n", fname);
-    img.Resize(mshadow::Shape3(3, res.rows, res.cols));
-    for(index_t y = 0; y < img.size(1); ++y) {
-      for(index_t x = 0; x < img.size(2); ++x) {
-        cv::Vec3b bgr = res.at<cv::Vec3b>(y, x);
-        // store in RGB order
-        img[2][y][x] = bgr[0];
-        img[1][y][x] = bgr[1];
-        img[0][y][x] = bgr[2];
-      }
+    if(res.channels() == 3) // Color
+    {
+      img.Resize(mshadow::Shape3(3, res.rows, res.cols));
+      for(index_t y = 0; y < img.size(1); ++y) {
+        for(index_t x = 0; x < img.size(2); ++x) {
+          cv::Vec3b bgr = res.at<cv::Vec3b>(y, x);
+          // store in RGB order
+          img[2][y][x] = bgr[0];
+          img[1][y][x] = bgr[1];
+          img[0][y][x] = bgr[2];
+        }
+     }
     }
+    else if(res.channels() == 1)  // gray
+    {
+      img.Resize(mshadow::Shape3(1, res.rows, res.cols));
+      for(index_t y = 0; y < img.size(1); ++y) {
+        for(index_t x = 0; x < img.size(2); ++x) {
+          img[y][x] = res.at(y, x);
+        }
+     }
+    }
+    
     out.data = img;
     // free memory
     res.release();
